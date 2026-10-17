@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, food_card with context %}
+{% block title %}Food · Game Night{% endblock %}
+{% block content %}
+<h1>Food</h1>
+{% if not night %}<div class="flash error">Voting opens once a game night is scheduled.</div>{% endif %}
+<form class="search card pad" role="search">
+  <input name="q" value="{{ q }}" placeholder="Search food…" aria-label="Search food">
+  <button class="primary">Search</button>
+  {% if q %}<a class="btn ghost" href="{{ url_for('views.food') }}">Clear</a>{% endif %}
+</form>
+<div class="grid">
+  {% for r in foods %}{{ food_card(r, request.full_path.rstrip('?'), night, True) }}
+  {% else %}<p>{{ 'No food matches.' if q else 'No food options yet.' }}</p>{% endfor %}
+</div>
+<details class="card pad" {{ 'open' if not foods }}>
+  <summary><strong>Suggest food</strong></summary>
+  <form method="post" action="{{ url_for('views.food_add') }}">
+    {{ csrf() }}
+    <label>Name <input name="name" required maxlength="100" placeholder="Pizza, tacos, potluck…"></label>
+    <label>Notes <input name="notes" maxlength="300" placeholder="Where from, dietary notes (optional)"></label>
+    <button class="primary">Add</button>
+  </form>
+</details>
+{% endblock %}

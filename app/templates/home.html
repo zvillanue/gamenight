@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, game_card, food_card with context %}
+{% block title %}Game Night{% endblock %}
+{% block content %}
+<section class="hero card pad">
+  {% if night %}
+  <p class="small">Next game night</p>
+  <h1>{{ night.starts_at|local_dt }}</h1>
+  {% if night.location %}<p>📍 {{ night.location }}</p>{% endif %}
+  {% if night.notes %}<p>{{ night.notes }}</p>{% endif %}
+  <div id="countdown" data-target="{{ night.starts_at|utc_iso }}" aria-live="off">…</div>
+  <form method="post" action="{{ url_for('views.rsvp') }}" class="rsvp">
+    {{ csrf() }}
+    <button name="going" value="yes" class="{{ 'primary' if my_rsvp is true else 'ghost' }}" aria-pressed="{{ 'true' if my_rsvp is true else 'false' }}">✅ I'm going</button>
+    <button name="going" value="no" class="{{ 'primary' if my_rsvp is false else 'ghost' }}" aria-pressed="{{ 'true' if my_rsvp is false else 'false' }}">❌ Can't make it</button>
+  </form>
+  {% else %}
+  <h1>No game night scheduled yet</h1>
+  <p>Check back soon{% if current_user.is_admin %} — or <a href="{{ url_for('admin.panel') }}">schedule one</a>{% endif %}.</p>
+  {% endif %}
+</section>
+
+{% if night %}
+<section class="card pad">
+  <h2>Who's coming: {{ total_going }}</h2>
+  {% if groups %}
+  <ul class="chips">
+    {% for name, people in groups %}
+    <li class="chip" tabindex="0">
+      <strong>{{ people|length }}</strong> {{ name }}
+      <span class="tip" role="tooltip">{{ people|join(', ') }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="small">Hover (or tap) a group to see who's in it.</p>
+  {% else %}<p>Nobody has RSVP'd yet. Be the first!</p>{% endif %}
+</section>
+{% endif %}
+
+<section>
+  <div class="row"><h2>Top games</h2>
+    <form action="{{ url_for('views.games') }}" class="search"><input name="q" placeholder="Search all games…" aria-label="Search games"><button class="ghost">Search</button></form></div>
+  {% if night and total_going %}<p class="small">Colour shows fit for {{ total_going }} players: yellow = a bit crowded, red = way too many.</p>{% endif %}
+  <div class="grid">
+    {% for r in games %}{{ game_card(r, '/', night) }}{% else %}<p>No games yet — <a href="{{ url_for('views.games') }}">add the first one</a>.</p>{% endfor %}
+  </div>
+  <p><a href="{{ url_for('views.games') }}">See all games / suggest one →</a></p>
+</section>
+
+<section>
+  <div class="row"><h2>Top food</h2>
+    <form action="{{ url_for('views.food') }}" class="search"><input name="q" placeholder="Search all food…" aria-label="Search food"><button class="ghost">Search</button></form></div>
+  <div class="grid">
+    {% for r in foods %}{{ food_card(r, '/', night) }}{% else %}<p>No food options yet — <a href="{{ url_for('views.food') }}">add one</a>.</p>{% endfor %}
+  </div>
+  <p><a href="{{ url_for('views.food') }}">See all food / suggest one →</a></p>
+</section>
+{% endblock %}

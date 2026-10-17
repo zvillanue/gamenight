@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Create account · Game Night{% endblock %}
+{% block content %}
+<section class="narrow card pad">
+  <h1>Create your account</h1>
+  {% if first_user %}<p class="small">You're the first person here, so this account becomes the admin.</p>{% endif %}
+  <p class="small">We only keep your name, username, password (stored hashed) and how you know Zack.</p>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% if needs_invite %}<label>Invite code <input name="invite" required autocomplete="off"></label>{% endif %}
+    <label>Your name <input name="name" required maxlength="50" autocomplete="name" value="{{ request.form.get('name', '') }}"></label>
+    <label>Username <input name="username" required maxlength="32" autocomplete="username" value="{{ request.form.get('username', '') }}"></label>
+    <label>Password <span class="small">(10+ characters)</span>
+      <input type="password" name="password" required minlength="10" maxlength="128" autocomplete="new-password"></label>
+    <label>Confirm password <input type="password" name="password2" required autocomplete="new-password"></label>
+    <label>How do you know Zack?
+      <select name="group_id">
+        <option value="">Prefer not to say</option>
+        {% for g in groups %}<option value="{{ g.id }}" {{ 'selected' if request.form.get('group_id')|string == g.id|string }}>{{ g.name }}</option>{% endfor %}
+      </select></label>
+    <button class="primary">Create account</button>
+  </form>
+  <p class="small">Already have one? <a href="{{ url_for('auth.login') }}">Log in</a></p>
+</section>
+{% endblock %}

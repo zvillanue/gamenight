@@ -1,0 +1,34 @@
+services:
+  gamenight:
+    build: .
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file: .env
+    environment:
+      - DATABASE_URL=sqlite:////app/instance/gamenight.db
+      - UPLOAD_FOLDER=/app/instance/uploads
+      - RATELIMIT_STORAGE_URI=redis://redis:6379
+    volumes:
+      - ./instance:/app/instance
+    ports:
+      # Local-only port for debugging (curl http://127.0.0.1:5001). The public
+      # path is Caddy -> gamenight:8000 over the shared Docker network.
+      - "127.0.0.1:5001:8000"
+    networks:
+      - default
+      - obsidian-shared
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    # Only holds login rate-limit counters; nothing to persist.
+    networks:
+      - default
+    restart: unless-stopped
+
+networks:
+  # Created once with `docker network create obsidian-shared`; the store's
+  # Caddy joins it too, which is how it can reach `gamenight:8000`.
+  obsidian-shared:
+    external: true

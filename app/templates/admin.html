@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Admin · Game Night{% endblock %}
+{% block content %}
+<h1>Admin</h1>
+<section class="card pad"><h2>Game nights</h2>
+  <form method="post" action="{{ url_for('admin.night_add') }}" class="two">{{ csrf() }}
+    <label>Date &amp; time <input type="datetime-local" name="starts_at" required></label>
+    <label>Location <input name="location" maxlength="120"></label>
+    <label>Notes <input name="notes" maxlength="500"></label>
+    <div><button class="primary">Schedule</button></div></form>
+  <ul class="plain">{% for n in nights %}
+    <li>{{ n.starts_at|local_dt }}{% if n.location %} — {{ n.location }}{% endif %}
+      <form method="post" action="{{ url_for('admin.night_delete', night_id=n.id) }}" class="inline" data-confirm="Delete this game night and its RSVPs/votes?">{{ csrf() }}<button class="link danger">Delete</button></form></li>
+  {% else %}<li>None yet.</li>{% endfor %}</ul>
+  <p class="small">The soonest upcoming night is the one shown on the home page; votes and RSVPs belong to it, so each night starts fresh.</p></section>
+
+<section class="card pad"><h2>"How do you know Zack?" options</h2>
+  <form method="post" action="{{ url_for('admin.group_add') }}" class="search">{{ csrf() }}
+    <input name="name" required maxlength="60" placeholder="Work, Church, College…" aria-label="New affiliation"><button class="primary">Add</button></form>
+  <ul class="plain">{% for g in groups %}
+    <li>{{ g.name }} <span class="small">({{ group_sizes.get(g.id, 0) }} members)</span>
+      <form method="post" action="{{ url_for('admin.group_delete', group_id=g.id) }}" class="inline" data-confirm="Remove {{ g.name }}?">{{ csrf() }}<button class="link danger">Remove</button></form></li>
+  {% else %}<li>None yet — add some so members can pick one.</li>{% endfor %}</ul></section>
+
+<section class="card pad"><h2>Members ({{ users|length }})</h2>
+  <table><thead><tr><th>Name</th><th>Username</th><th>Group</th><th></th></tr></thead><tbody>
+  {% for u in users %}<tr>
+    <td>{{ u.name }}{% if u.is_admin %} <span class="badge">admin</span>{% endif %}</td>
+    <td>{{ u.username }}</td><td>{{ u.group.name if u.group else '—' }}</td>
+    <td class="actions">
+      <form method="post" action="{{ url_for('admin.user_password', user_id=u.id) }}" class="inline">{{ csrf() }}
+        <input type="password" name="password" placeholder="New password" minlength="10" required autocomplete="new-password" aria-label="New password for {{ u.name }}"><button class="ghost">Reset</button></form>
+      <form method="post" action="{{ url_for('admin.user_toggle_admin', user_id=u.id) }}" class="inline">{{ csrf() }}<button class="ghost">{{ 'Remove admin' if u.is_admin else 'Make admin' }}</button></form>
+      {% if u.id != current_user.id %}<form method="post" action="{{ url_for('admin.user_delete', user_id=u.id) }}" class="inline" data-confirm="Delete {{ u.name }} and their data?">{{ csrf() }}<button class="ghost danger">Delete</button></form>{% endif %}
+    </td></tr>{% endfor %}</tbody></table></section>
+{% endblock %}
