@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Account · Game Night{% endblock %}
+{% block content %}
+<section class="narrow">
+<div class="card pad"><h2>Profile</h2>
+  <p class="small">Username: {{ current_user.username }}</p>
+  <form method="post">{{ csrf() }}<input type="hidden" name="action" value="profile">
+    <label>Name <input name="name" required maxlength="50" value="{{ current_user.name }}"></label>
+    <label>How do you know Zack?
+      <select name="group_id"><option value="">Prefer not to say</option>
+        {% for g in groups %}<option value="{{ g.id }}" {{ 'selected' if current_user.group_id == g.id }}>{{ g.name }}</option>{% endfor %}
+      </select></label>
+    <button class="primary">Save</button></form></div>
+<div class="card pad"><h2>Change password</h2>
+  <form method="post">{{ csrf() }}<input type="hidden" name="action" value="password">
+    <label>Current password <input type="password" name="current" required autocomplete="current-password"></label>
+    <label>New password <input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
+    <label>Confirm new password <input type="password" name="password2" required autocomplete="new-password"></label>
+    <button class="primary">Change password</button></form></div>
+<div class="card pad"><h2>Delete my account</h2>
+  <p class="small">Removes your account, RSVPs and votes. Games and food you suggested stay on the list without your name.</p>
+  <form method="post" data-confirm="Permanently delete your account?">{{ csrf() }}<input type="hidden" name="action" value="delete">
+    <label>Password <input type="password" name="current" required autocomplete="current-password"></label>
+    <button class="ghost danger">Delete account</button></form></div>
+</section>
+{% endblock %}

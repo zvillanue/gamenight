@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf, game_card with context %}
+{% block title %}Games · Game Night{% endblock %}
+{% block content %}
+<h1>Games</h1>
+{% if not night %}<div class="flash error">Voting opens once a game night is scheduled.</div>{% endif %}
+<form class="search card pad" role="search">
+  <input name="q" value="{{ q }}" placeholder="Search by name, type, genre…" aria-label="Search games">
+  <button class="primary">Search</button>
+  {% if q %}<a class="btn ghost" href="{{ url_for('views.games') }}">Clear</a>{% endif %}
+</form>
+<div class="grid">
+  {% for r in games %}{{ game_card(r, request.full_path.rstrip('?'), night, True) }}
+  {% else %}<p>{{ 'No games match.' if q else 'No games yet.' }}</p>{% endfor %}
+</div>
+
+<details class="card pad" {{ 'open' if not games }}>
+  <summary><strong>Suggest a game</strong></summary>
+  <form method="post" action="{{ url_for('views.game_add') }}" enctype="multipart/form-data">
+    {{ csrf() }}
+    <label>Name <input name="name" required maxlength="100"></label>
+    <div class="two">
+      <label>Min players <input type="number" name="min_players" min="1" max="99" value="1" required></label>
+      <label>Max players <input type="number" name="max_players" min="1" max="99" value="4" required></label>
+    </div>
+    <div class="two">
+      <label>Type <input name="game_type" maxlength="40" placeholder="Board game, card game, video game…"></label>
+      <label>Genre <input name="genre" maxlength="40" placeholder="Strategy, party, co-op…"></label>
+    </div>
+    <label>Info <textarea name="info" maxlength="500" rows="3" placeholder="Length, how it plays, anything useful"></textarea></label>
+    <label>Photo (optional) <input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
+    <label class="check"><input type="checkbox" name="has_it"> I have this game</label>
+    <button class="primary">Add game</button>
+  </form>
+</details>
+{% endblock %}

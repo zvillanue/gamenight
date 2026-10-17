@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf with context %}
+{% block title %}Edit {{ game.name }}{% endblock %}
+{% block content %}
+<section class="narrow card pad">
+  <h1>Edit game</h1>
+  <form method="post" enctype="multipart/form-data">
+    {{ csrf() }}
+    <label>Name <input name="name" required maxlength="100" value="{{ game.name }}"></label>
+    <div class="two">
+      <label>Min players <input type="number" name="min_players" min="1" max="99" value="{{ game.min_players }}" required></label>
+      <label>Max players <input type="number" name="max_players" min="1" max="99" value="{{ game.max_players }}" required></label>
+    </div>
+    <div class="two">
+      <label>Type <input name="game_type" maxlength="40" value="{{ game.game_type }}"></label>
+      <label>Genre <input name="genre" maxlength="40" value="{{ game.genre }}"></label>
+    </div>
+    <label>Info <textarea name="info" maxlength="500" rows="3">{{ game.info }}</textarea></label>
+    {% if game.image %}<img class="thumb" src="{{ url_for('views.game_image', filename=game.image) }}" alt="">
+    <label class="check"><input type="checkbox" name="remove_image"> Remove photo</label>{% endif %}
+    <label>{{ 'Replace photo' if game.image else 'Photo' }} <input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
+    <button class="primary">Save</button>
+    <a class="btn ghost" href="{{ url_for('views.games') }}">Cancel</a>
+  </form>
+  <form method="post" action="{{ url_for('views.game_delete', game_id=game.id) }}" data-confirm="Delete {{ game.name }} and its votes?">
+    {{ csrf() }}<button class="ghost danger">Delete game</button>
+  </form>
+</section>
+{% endblock %}

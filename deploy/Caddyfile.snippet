@@ -1,0 +1,5 @@
+# Add this site block to obsidian-store/deploy/Caddyfile (already done on the
+# obsidian-store branch). Caddy fetches and renews the TLS certificate itself.
+gamenight.thezacknet.com {
+	reverse_proxy gamenight:8000
+}

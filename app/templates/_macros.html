@@ -1,0 +1,64 @@
+{% macro csrf() %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% endmacro %}
+
+{% macro vote_button(url, voted, votes, next) %}
+<form method="post" action="{{ url }}" class="inline">
+  {{ csrf() }}<input type="hidden" name="next" value="{{ next }}">
+  <button class="vote {{ 'on' if voted }}" aria-pressed="{{ 'true' if voted else 'false' }}">
+    {{ '★' if voted else '☆' }} {{ votes }} vote{{ '' if votes == 1 else 's' }}
+  </button>
+</form>
+{% endmacro %}
+
+{% macro game_card(r, next, night, show_actions=False) %}
+{% set g = r.game %}
+<article class="card game {{ r.status }}">
+  {% if g.image %}<img src="{{ url_for('views.game_image', filename=g.image) }}" alt="" loading="lazy">{% endif %}
+  <div class="body">
+    <h3>{{ g.name }}</h3>
+    <p class="meta">
+      <span>👥 {{ g.min_players }}–{{ g.max_players }} players</span>
+      {% if g.game_type %}<span>{{ g.game_type }}</span>{% endif %}
+      {% if g.genre %}<span>{{ g.genre }}</span>{% endif %}
+    </p>
+    {% if g.info %}<p>{{ g.info }}</p>{% endif %}
+    {% if r.status_text %}<p class="warnline">{{ '⚠️' if r.status == 'warn' else '⛔' }} {{ r.status_text }}</p>{% endif %}
+    <p class="small">
+      Suggested by {{ g.suggester.name if g.suggester else 'a former member' }} ·
+      {% if r.owners %}Owned by {{ r.owners|join(', ') }}{% else %}Nobody has it yet{% endif %}
+    </p>
+    <div class="actions">
+      {% if night %}{{ vote_button(url_for('views.game_vote', game_id=g.id), r.voted, r.votes, next) }}
+      {% else %}<span class="small">{{ r.votes }} votes</span>{% endif %}
+      {% if show_actions %}
+      <form method="post" action="{{ url_for('views.game_own', game_id=g.id) }}" class="inline">
+        {{ csrf() }}<input type="hidden" name="next" value="{{ next }}">
+        <button class="ghost">{{ "I don't have it" if r.i_own else 'I have it' }}</button>
+      </form>
+      {% if current_user.is_admin or g.suggested_by_id == current_user.id %}
+      <a class="btn ghost" href="{{ url_for('views.game_edit', game_id=g.id) }}">Edit</a>
+      {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% endmacro %}
+
+{% macro food_card(r, next, night, show_actions=False) %}
+{% set f = r.food %}
+<article class="card food">
+  <div class="body">
+    <h3>{{ f.name }}</h3>
+    {% if f.notes %}<p>{{ f.notes }}</p>{% endif %}
+    <p class="small">Suggested by {{ f.suggester.name if f.suggester else 'a former member' }}</p>
+    <div class="actions">
+      {% if night %}{{ vote_button(url_for('views.food_vote', food_id=f.id), r.voted, r.votes, next) }}
+      {% else %}<span class="small">{{ r.votes }} votes</span>{% endif %}
+      {% if show_actions and (current_user.is_admin or f.suggested_by_id == current_user.id) %}
+      <form method="post" action="{{ url_for('views.food_delete', food_id=f.id) }}" class="inline" data-confirm="Remove {{ f.name }}?">
+        {{ csrf() }}<button class="ghost danger">Remove</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% endmacro %}
